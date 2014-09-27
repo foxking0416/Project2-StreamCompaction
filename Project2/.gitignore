@@ -1,0 +1,35 @@
+# General
+builds/
+
+# Compiled objects
+*.o
+*.obj
+
+# Compiled dynamic libraries
+*.dll
+*.so
+
+# Compiled static libraries
+*.lib
+
+# Windows specific
+[Rr]elease/
+[Dd]ebug/
+*.suo
+*.pdb
+*.sdf
+*.opensdf
+*.user
+*.deps
+*.ipch
+
+# OSX specific
+.DS_Store
+*/.DS_Store
+
+# VIM swap files
+*.swp
+
+# Exceptions
+!*/shared/*
+
