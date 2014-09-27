@@ -15,10 +15,10 @@ using namespace std;
 
 void checkCUDAError(const char *msg, int line);
 void initCuda(int N);
-void naiveParallelScanWithCuda(const int *a, int *b, unsigned int size);
-void shareMemoryParallelScanWithCuda(const int *a, int *b, unsigned int size);
-void shareMemoryParallelScanArbitraryLengthWithCuda(const int *a, int *b, unsigned int size);
-void parallelScatterWithCuda(const int *a, int *b, unsigned int size);
+void naiveParallelScan(const int *a, int *b, unsigned int size);
+void shareMemoryParallelScan(const int *a, int *b, unsigned int size);
+void shareMemoryParallelScanArbitraryLength(const int *a, int *b, unsigned int size);
+void parallelScatter(const int *a, int *b, unsigned int size);
 double diffclock( clock_t clock1, clock_t clock2 );
 
 

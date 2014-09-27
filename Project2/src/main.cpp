@@ -54,10 +54,8 @@ int main(int argc, char** argv)
 
 	////////////////////GPU Version///////////////////////////////
 
-
-
 	int* resultNaiveScan = new int[arraySizeShort];
-	naiveParallelScanWithCuda(inputArrayShort, resultNaiveScan, arraySizeShort);
+	naiveParallelScan(inputArrayShort, resultNaiveScan, arraySizeShort);
 	printf("Parallel Naive Scan\n");
 	for(int i = 0; i < 5; ++i){
 		printf("%d  ", resultNaiveScan[arraySizeShort - 5 + i]);
@@ -67,7 +65,7 @@ int main(int argc, char** argv)
 
 	
 	int* resultShareMemoryScan = new int[arraySizeShort];
-	shareMemoryParallelScanWithCuda(inputArrayShort, resultShareMemoryScan, arraySizeShort);
+	shareMemoryParallelScan(inputArrayShort, resultShareMemoryScan, arraySizeShort);
 	printf("Parallel Scan Share Memory\n");
 	for(int i = 0; i < 5; ++i){
 		printf("%d  ", resultShareMemoryScan[arraySizeShort - 5 + i]);
@@ -76,25 +74,22 @@ int main(int argc, char** argv)
 
 	//arraySizeLong
 	int* resultShareMemoryScanArbLength = new int[arraySizeLong];
-	shareMemoryParallelScanArbitraryLengthWithCuda(inputArrayLong, resultShareMemoryScanArbLength, arraySizeLong);
+	shareMemoryParallelScanArbitraryLength(inputArrayLong, resultShareMemoryScanArbLength, arraySizeLong);
 	printf("Parallel Scan Share Memory Arbitrary Length \n");
 	for(int i = 0; i < 5; ++i){
 		printf("%d  ", resultShareMemoryScanArbLength[arraySizeLong - 5 + i]);
 	}
-	//for(int i = 0; i < arraySize; ++i){
-	//	printf("%d  ", resultShareMemoryScanArbLength[i]);
-	//}
 	printf("\n\n");
 	
-	/*
-	int* resultScatter = new int[arraySize];
-	parallelScatterWithCuda(initial, resultScatter, 10);
+	
+	int* resultScatter = new int[10];
+	parallelScatter(initial, resultScatter, 10);
 	printf("Parallel Naive Scatter \n");
 	for(int i = 0; i < 10; ++i){
 		printf("%d  ", resultScatter[i]);
 	}
 	printf("\n\n");
-	*/
+	
 
 
 
