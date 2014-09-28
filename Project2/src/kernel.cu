@@ -78,28 +78,7 @@ __global__ void sharedMemoryParallelScan (const int *a, int *b, int size){
 	}
 }
 
-__global__ void sharedMemoryParallelScanArbritraryLength (const int *a, int *b, int size, int offset){
-	__shared__ int temp[blockSize];
-	//__shared__ int temp2[blockSize];
-
-	int index = (blockIdx.x * blockDim.x) + threadIdx.x;
-
-
-	temp[threadIdx.x] = a[index];
-	__syncthreads();
-
-	if(index < size){
-		if(index >= offset){
-			b[index] = a[index - offset] + temp[threadIdx.x];
-		}
-		else{
-			b[index] = temp[threadIdx.x];
-		}
-		__syncthreads();
-	}
-}
-
-__global__ void sharedMemoryParallelScanArbritraryLength2 (const int *a, int *b, int offset, int size){
+__global__ void sharedMemoryParallelScanArbritraryLength (const int *a, int *b, int offset, int size){
 	__shared__ int temp[blockSize];
 	__shared__ int temp2[blockSize];
 
@@ -121,6 +100,51 @@ __global__ void sharedMemoryParallelScanArbritraryLength2 (const int *a, int *b,
 	__syncthreads();
 
 }
+
+__global__ void sharedMemoryParallelScanArbritraryLengthStep1 (const int *a, int *b, int size){
+	__shared__ int temp[blockSize];
+	__shared__ int temp2[blockSize];
+
+	int index = (blockIdx.x * blockDim.x) + threadIdx.x;
+
+
+	temp[threadIdx.x] = a[index];
+	__syncthreads();
+
+	for(int offset = 1; offset <= blockSize; offset *= 2){
+
+		if(threadIdx.x >= offset){
+			temp2[threadIdx.x] = temp[threadIdx.x - offset] + temp[threadIdx.x];
+		}
+		else{
+			temp2[threadIdx.x] = temp[threadIdx.x];
+		}
+
+		temp[threadIdx.x] = temp2[threadIdx.x];
+		__syncthreads();
+	}
+
+	__syncthreads();
+
+	b[index] = temp2[threadIdx.x];
+}
+
+__global__ void sharedMemoryParallelScanArbritraryLengthStep2 (const int *a, int *b, int size){
+	__shared__ int temp[blockSize];
+
+	int index = (blockIdx.x * blockDim.x) + threadIdx.x;
+	
+	temp[threadIdx.x] = a[index];
+	__syncthreads();
+
+	for(int b = 0; b < blockIdx.x ; ++b){
+
+		temp[threadIdx.x] += a[ (b + 1) * blockSize - 1];
+
+	}
+	b[index] = temp[threadIdx.x];
+}
+
 
 __global__ void scan(float *g_odata, float *g_idata, int n) 
 { 
@@ -144,24 +168,42 @@ __global__ void scan(float *g_odata, float *g_idata, int n)
 	 g_odata[thid] = temp[pout*n + thid]; // write output 
 } 
 
-__global__ void parallelScatterStep1(int *g_idata, int *g_odata, int size) {
+__global__ void parallelScatterStep1(const int *g_idata, int *g_odata, int size) {
 	
 	__shared__ int temp[blockSize];
+	__shared__ int temp2[blockSize];
 	int index = (blockIdx.x * blockDim.x) + threadIdx.x;
 
 	temp[threadIdx.x] = g_idata[index];
 	__syncthreads();
 	if(index < size){
 		if(temp[threadIdx.x] == 0)
-			g_odata[index] = 0;
+			temp2[threadIdx.x] = 0;
 		else 
-			g_odata[index] = 1;
+			temp2[threadIdx.x] = 1;
 
 		__syncthreads();
+
+
+		for(int offset = 1; offset <= blockSize; offset *= 2){
+
+			if(threadIdx.x >= offset){
+				temp[threadIdx.x] = temp2[threadIdx.x] + temp2[threadIdx.x - offset];
+			}
+			else{
+				temp[threadIdx.x] = temp2[threadIdx.x];
+			}
+
+
+			temp2[threadIdx.x] = temp[threadIdx.x];
+			__syncthreads();
+		}
+
+		g_odata[index] = temp2[threadIdx.x];
 	}
 }
 
-__global__ void parallelScatterStep2(int *g_idata, int *g_odata, int size) {
+__global__ void parallelScatterStep2(const int *g_idata, int *g_odata, int size) {
 	
 	__shared__ int temp[blockSize];
 	int index = (blockIdx.x * blockDim.x) + threadIdx.x;
@@ -169,9 +211,6 @@ __global__ void parallelScatterStep2(int *g_idata, int *g_odata, int size) {
 	temp[threadIdx.x] = g_idata[index];
 	__syncthreads();
 
-	//if(temp[threadIdx.x] != 0){
-	//	g_odata[postScanData[index - 1]] = temp[threadIdx.x];
-	//}
 
 	if(threadIdx.x == 0){
 		if(index == 0)
@@ -182,23 +221,26 @@ __global__ void parallelScatterStep2(int *g_idata, int *g_odata, int size) {
 	else
 		g_odata[index] = temp[threadIdx.x - 1];
 
-	
-
 }
 
-__global__ void parallelScatterStep3(int *g_idata, int *intermediate, int *g_odata, int size) {
-	__shared__ int temp[blockSize];
+__global__ void parallelScatterStep3(const int *g_idata, int *intermediate, int *g_odata, int size) {
+	//__shared__ int temp[blockSize];
 	int index = (blockIdx.x * blockDim.x) + threadIdx.x;
-		
-	temp[threadIdx.x] = g_idata[index];
-	__syncthreads();	
-	
-	if(temp[threadIdx.x] != 0){
+	//	
+	//temp[threadIdx.x] = g_idata[index];
+	//__syncthreads();	
+	//
+	//if(temp[threadIdx.x] != 0){
+	//	int newIndex = intermediate[index];
+	// 	g_odata[newIndex] = temp[threadIdx.x];
+	//}
+
+	if(g_idata[index] != 0){
 		int newIndex = intermediate[index];
-	 	g_odata[newIndex] = temp[threadIdx.x];
+	 	g_odata[newIndex] = g_idata[index];
 	}
 
-	__syncthreads();
+	//__syncthreads();
 }
 
 
@@ -218,16 +260,16 @@ void naiveParallelScan(const int *a, int *b, unsigned int size)
 	// Copy input vectors from host memory to GPU buffers.
 	cudaMemcpy(dev_a, a, size * sizeof(int), cudaMemcpyHostToDevice);
 
-	//clock_t begin = clock();
+
 
 	cudaEvent_t start, stop;
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
 	cudaEventRecord( start, 0);
 
-
-	naiveParallelScan <<<1, size>>>(dev_a, dev_b, temp, size);
-
+	for(int iter = 0; iter < iterNum; ++iter){
+		naiveParallelScan <<<1, size>>>(dev_a, dev_b, temp, size);
+	}
 	// stop the timer
 	cudaEventRecord( stop, 0);
     cudaEventSynchronize( stop );
@@ -235,13 +277,12 @@ void naiveParallelScan(const int *a, int *b, unsigned int size)
     cudaEventElapsedTime( &time, start, stop);
 
 
-	printf("Elapsed Time For GPU: %.4f \n", time);
+	printf("Elapsed Time For GPU Naive Parallel Scan %d iter: %.4f ms \n", iterNum, time);
 
 	// Check for any errors launching the kernel
     cudaGetLastError();
 
-	// cudaDeviceSynchronize waits for the kernel to finish, and returns
-    // any errors encountered during the launch.
+	// cudaDeviceSynchronize waits for the kernel to finish
 	cudaDeviceSynchronize();
 
 	// Copy output vector from GPU buffer to host memory.
@@ -268,20 +309,20 @@ void shareMemoryParallelScan(const int *a, int *b, unsigned int size)
     cudaEventCreate(&stop);
 	cudaEventRecord( start, 0);
 
-	sharedMemoryParallelScan <<<1, size>>>(dev_a, dev_b, size);
-
+	for(int iter = 0; iter < iterNum; ++iter){
+		sharedMemoryParallelScan <<<1, size>>>(dev_a, dev_b, size);
+	}
 	// stop the timer
 	cudaEventRecord( stop, 0);
     cudaEventSynchronize( stop );
 	float time = 0.0f;
     cudaEventElapsedTime( &time, start, stop);
-	printf("Elapsed Time For GPU with Share memory: %.4f \n", time);
+	printf("Elapsed Time For GPU Parallel Scan with Share memory %d iter: %.4f ms \n", iterNum, time);
 
 	// Check for any errors launching the kernel
     cudaGetLastError();
 
 	// cudaDeviceSynchronize waits for the kernel to finish, and returns
-    // any errors encountered during the launch.
 	cudaDeviceSynchronize();
 
 	// Copy output vector from GPU buffer to host memory.
@@ -292,11 +333,12 @@ void shareMemoryParallelScanArbitraryLength(const int *a, int *b, unsigned int s
 {
 	int *dev_a = 0;
 	int *dev_b = 0;
-
+	int *temp = 0;
 
 	// Allocate GPU buffers for three vectors (two input, one output)    .
 	cudaMalloc((void**)&dev_a, size * sizeof(int));
     cudaMalloc((void**)&dev_b, size * sizeof(int));
+	cudaMalloc((void**)&temp, size * sizeof(int));
 
 	// Copy input vectors from host memory to GPU buffers.
 	cudaMemcpy(dev_a, a, size * sizeof(int), cudaMemcpyHostToDevice);
@@ -309,26 +351,29 @@ void shareMemoryParallelScanArbitraryLength(const int *a, int *b, unsigned int s
 	cudaEventRecord( start, 0);
 
 
+	////for(int iter = 0; iter < iterNum; ++iter){
+	////	cudaMemcpy(dev_a, a, size * sizeof(int), cudaMemcpyHostToDevice);
+	//	for(int offset = 1; offset <= size; offset *= 2){
+	//		sharedMemoryParallelScanArbritraryLength <<<fullBlocksPerGrid, blockSize>>>(dev_a, dev_b, offset, size);
+	//		cudaMemcpy(dev_a, dev_b, size * sizeof(int), cudaMemcpyDeviceToDevice);
+	//	}
+	////}
 
-	for(int offset = 1; offset <= size; offset *= 2){
-		sharedMemoryParallelScanArbritraryLength2 <<<fullBlocksPerGrid, blockSize>>>(dev_a, dev_b, offset, size);
-		cudaMemcpy(dev_a, dev_b, size * sizeof(int), cudaMemcpyDeviceToDevice);
-		//dev_a = dev_b;
-	}
 
+	sharedMemoryParallelScanArbritraryLengthStep1 <<<fullBlocksPerGrid, blockSize>>>(dev_a, temp, size);
+	sharedMemoryParallelScanArbritraryLengthStep2 <<<fullBlocksPerGrid, blockSize>>>(temp, dev_b, size);
 
 	// stop the timer
 	cudaEventRecord( stop, 0);
     cudaEventSynchronize( stop );
 	float time = 0.0f;
     cudaEventElapsedTime( &time, start, stop);
-	printf("Elapsed Time For GPU with Share memory arbitrary length: %.4f \n", time);
+	printf("Elapsed Time For GPU Parallel Scan with Share memory arbitrary length %d iter: %.4f ms \n", iterNum, time);
 
 	// Check for any errors launching the kernel
     cudaGetLastError();
 
 	// cudaDeviceSynchronize waits for the kernel to finish, and returns
-    // any errors encountered during the launch.
 	cudaDeviceSynchronize();
 
 	// Copy output vector from GPU buffer to host memory.
@@ -342,12 +387,14 @@ void parallelScatter(const int *a, int *b, unsigned int size)
 	int *dev_b = 0;
 	int *tempArrPreScan = 0;
 	int *tempArrPostScan = 0;
+	int *intermediate = 0;
 
 	// Allocate GPU buffers for three vectors (two input, one output)    .
 	cudaMalloc((void**)&dev_a, size * sizeof(int));
 	cudaMalloc((void**)&dev_b, size * sizeof(int));
 	cudaMalloc((void**)&tempArrPreScan, size * sizeof(int));
 	cudaMalloc((void**)&tempArrPostScan, size * sizeof(int));
+	cudaMalloc((void**)&intermediate, size * sizeof(int));
 
 	// Copy input vectors from host memory to GPU buffers.
 	cudaMemcpy(dev_a, a, size * sizeof(int), cudaMemcpyHostToDevice);
@@ -358,27 +405,28 @@ void parallelScatter(const int *a, int *b, unsigned int size)
     cudaEventCreate(&stop);
 	cudaEventRecord( start, 0);
 
+
 	parallelScatterStep1<<<fullBlocksPerGrid, blockSize>>>(dev_a, tempArrPreScan, size);
-	for(int offset = 1; offset <= size; offset *= 2){
-		sharedMemoryParallelScanArbritraryLength2 <<<fullBlocksPerGrid, blockSize>>>(tempArrPreScan, tempArrPostScan, offset, size);
-		cudaMemcpy(tempArrPreScan, tempArrPostScan, size * sizeof(int), cudaMemcpyDeviceToDevice);
-	}
+		cudaDeviceSynchronize();
+	sharedMemoryParallelScanArbritraryLengthStep2 <<<fullBlocksPerGrid, blockSize>>>(tempArrPreScan, tempArrPostScan, size);
+
+	parallelScatterStep2 <<<fullBlocksPerGrid, blockSize>>>(tempArrPostScan, intermediate, size);
+	cudaDeviceSynchronize();
+	parallelScatterStep3 <<<fullBlocksPerGrid, blockSize>>>(dev_a, intermediate, dev_b, size);
 
 
-	parallelScatterStep2 <<<fullBlocksPerGrid, blockSize>>>(tempArrPreScan, tempArrPostScan, size);
-	parallelScatterStep3 <<<fullBlocksPerGrid, blockSize>>>(dev_a, tempArrPostScan, dev_b, size);
 
 	// stop the timer
 	cudaEventRecord( stop, 0);
     cudaEventSynchronize( stop );
 	float time = 0.0f;
     cudaEventElapsedTime( &time, start, stop);
+	printf("Elapsed Time For GPU Scatter %d iter: %.4f ms \n", iterNum, time);
 
 	// Check for any errors launching the kernel
     cudaGetLastError();
 
 	// cudaDeviceSynchronize waits for the kernel to finish, and returns
-    // any errors encountered during the launch.
 	cudaDeviceSynchronize();
 
 	// Copy output vector from GPU buffer to host memory.

@@ -13,6 +13,7 @@ using namespace std;
 #define blockSize 128
 #define checkCUDAErrorWithLine(msg) checkCUDAError(msg, __LINE__)
 #define SHARED 0
+#define iterNum 100
 
 void checkCUDAError(const char *msg, int line);
 void initCuda(int N);
@@ -21,7 +22,7 @@ void shareMemoryParallelScan(const int *a, int *b, unsigned int size);
 void shareMemoryParallelScanArbitraryLength(const int *a, int *b, unsigned int size);
 void parallelScatter(const int *a, int *b, unsigned int size);
 double diffclock( clock_t clock1, clock_t clock2 );
-void scanByThrust();
+
 
 
 #endif
