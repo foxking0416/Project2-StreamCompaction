@@ -6,18 +6,27 @@
 int main(int argc, char** argv)
 {
 
-	int initial[10] = {0, 0, 3, 4, 0, 6, 6, 7, 0, 1};
+
 	int *inputArrayLong = new int[arraySizeLong];
 	int *inputArrayShort = new int[arraySizeShort];
 	for(int i = 0; i < arraySizeLong; ++i){
-		inputArrayLong[i] = i;
+		if(i % 2 == 0)
+			inputArrayLong[i] = 0;
+		else
+			inputArrayLong[i] = i;
 	}
 	for(int i = 0; i < arraySizeShort; ++i){
-		inputArrayShort[i] = i;
+		if(i % 2 == 0)
+			inputArrayShort[i] = 0;
+		else
+			inputArrayShort[i] = i;
 	}
 
 	clock_t begin = clock();
-	int* prefixSumInclusiveResult = serialPrefixSumInclusive(inputArrayLong, arraySizeLong);
+	int* prefixSumInclusiveResult = new int[arraySizeLong];
+	for(int iter = 0; iter < 100; iter++){
+		prefixSumInclusiveResult = serialPrefixSumInclusive(inputArrayLong, arraySizeLong);
+	}
 	// stop the timer
     clock_t end = clock();
 	float time = diffclock(end, begin);
@@ -40,7 +49,7 @@ int main(int argc, char** argv)
 	delete []prefixSumExclusiveResult;
 
 
-	int* scatterResult = serialScatter(initial, 10);
+	int* scatterResult = serialScatter(inputArrayLong, arraySizeLong);
 	printf("Serial Scatter\n");
 	for(int i = 0; i < 10; ++i){
 		printf("%d  ", scatterResult[i]);
@@ -82,11 +91,12 @@ int main(int argc, char** argv)
 	printf("\n\n");
 	
 	
-	int* resultScatter = new int[10];
-	parallelScatter(initial, resultScatter, 10);
+	int* resultScatter = new int[arraySizeLong];
+	parallelScatter(inputArrayLong, resultScatter, arraySizeLong);
 	printf("Parallel Naive Scatter \n");
 	for(int i = 0; i < 10; ++i){
-		printf("%d  ", resultScatter[i]);
+		printf("%d  ", resultScatter[arraySizeShort / 2 - 10 + i]);
+		//printf("%d  ", resultScatter[i]);
 	}
 	printf("\n\n");
 	
@@ -161,4 +171,28 @@ double diffclock( clock_t clock1, clock_t clock2 )
     double diffticks = clock1 - clock2;
     double diffms    = diffticks / ( CLOCKS_PER_SEC / 1000.0);
     return diffms;
+}
+
+void scanByThrust(){
+
+	//size_t n = 1000;
+	//const size_t output_size = std::min((size_t) 10, 2 * n);
+
+	//thrust::host_vector<int> h_input(n);
+	//thrust::device_vector<int> d_input(n);
+ // 
+	//thrust::host_vector<unsigned int> h_map = unittest::random_integers<unsigned int>(n);
+
+	//for(size_t i = 0; i < n; i++)
+	//{
+	//	h_map[i] =  h_map[i] % output_size;
+	//}
+
+	//thrust::device_vector<unsigned int> d_map = h_map;
+ // 
+	//thrust::host_vector<int>   h_output(output_size, 0);
+	//thrust::device_vector<int> d_output(output_size, 0);
+
+
+	//thrust::scatter(h_input.begin(), h_input.end(), h_map.begin(), h_output.begin());
 }

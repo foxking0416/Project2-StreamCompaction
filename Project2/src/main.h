@@ -12,6 +12,11 @@
 #include <fstream>
 #include "kernel.h"
 #include <ctime>
+#include <thrust/scan.h>
+#include <thrust/scatter.h>
+#include <thrust/execution_policy.h>
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
 
 using namespace std;
 
@@ -25,5 +30,7 @@ void initCuda();
 void cleanupCuda();
 void shut_down(int return_code);
 double diffclock( clock_t clock1, clock_t clock2 );
+void scanByThrust();
+
 
 #endif
