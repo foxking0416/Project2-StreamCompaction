@@ -33,7 +33,7 @@ void initCuda();
 void cleanupCuda();
 void shut_down(int return_code);
 double diffclock( clock_t clock1, clock_t clock2 );
-void scanByThrust(int* arr, int N);
+void scatterByThrust(int* arr, int N);
 
 
 #endif

@@ -6,6 +6,9 @@
 #include <cuda.h>
 #include <cmath>
 #include <ctime>
+//#include <nvToolsExt.h>
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
 
 
 using namespace std;
@@ -13,7 +16,9 @@ using namespace std;
 #define blockSize 128
 #define checkCUDAErrorWithLine(msg) checkCUDAError(msg, __LINE__)
 #define SHARED 0
-#define iterNum 100
+#define iterNum 1000
+#define arraySizeLong 50000
+#define arraySizeShort 100
 
 void checkCUDAError(const char *msg, int line);
 void initCuda(int N);
