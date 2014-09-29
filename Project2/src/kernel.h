@@ -18,7 +18,7 @@ using namespace std;
 #define SHARED 0
 #define iterNum 1000
 #define arraySizeLong 50000
-#define arraySizeShort 100
+#define arraySizeShort 20
 
 void checkCUDAError(const char *msg, int line);
 void initCuda(int N);
