@@ -20,7 +20,7 @@ From the table it looks like my GPU Naive parallel scan is slower than CPU seria
 (Although I doubt the CPU execution time.)
 I guess that is because the GPU version the data is all get from global memory.
 Besides, we don't provide any solution to avoid bank confliction.
-
+Or, maybe it is jsut because my CPU is too fast(i7-4700)
 
 
 #Question 2:
