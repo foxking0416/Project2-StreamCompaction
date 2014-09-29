@@ -43,4 +43,9 @@ iterate number: 100 times
 
 It looks like the scatter by using Thrust is much faster than my version.
 That means I may need to implement the scatter by using only the share memory
-and solve the bank confliction problem.
+and solve the bank confliction problem. Currently, because this function is for 
+arbitrary array length, I have to access the global memory when doing the scan.
+
+P.S. My program has a weird problem that the GPU scatter result will be wrong when I run my program the first time.
+But when I stop the program and run the second time, it will generate the correct result.
+I have no idea what's wrong with this situation.
