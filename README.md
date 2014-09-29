@@ -48,4 +48,4 @@ arbitrary array length, I have to access the global memory when doing the scan.
 
 P.S. My program has a weird problem that the GPU scatter result will be wrong when I run my program the first time.
 But when I stop the program and run the second time, it will generate the correct result.
-I have no idea what's wrong with this situation.
+I have no idea where is the problem.
