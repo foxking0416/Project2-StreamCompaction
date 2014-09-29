@@ -13,11 +13,11 @@ unit time is microsecond.
 The execution time of CPU is not stable.
 Therefore, I am not sure if this two result could be compared directly. 
 
-However, comparing with different array size I found that the execution time of GPU version
-is proportional to array size.  
+However, comparing with different array size I could say that the execution time of GPU version
+is possitive correlative to the array size.  
 
 From the table it looks like my GPU Naive parallel scan is slower than CPU serial scan.
-(Although I think the CPU execution time is not reliable)
+(Although I doubt the CPU execution time.)
 I guess that is because the GPU version the data is all get from global memory.
 Besides, we don't provide any solution to avoid bank confliction.
 
@@ -42,4 +42,5 @@ iterate number: 100 times
 ![ResultImage](compare3.jpg)
 
 It looks like the scatter by using Thrust is much faster than my version.
-That means I may need to 
+That means I may need to implement the scatter by using only the share memory
+and solve the bank confliction problem.
