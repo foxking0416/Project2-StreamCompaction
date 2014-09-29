@@ -1,4 +1,4 @@
-Question 1: 
+#Question 1: 
 Compare Serial Version Scan with Naive Parallel Scan No Share Memory
 
 iterate number: 1000 times
@@ -23,7 +23,7 @@ Besides, we don't provide any solution to avoid bank confliction.
 
 
 
-Question 2:
+#Question 2:
 Compare Parallel Scan No Share Memory with Parallel Scan with Share Memory
 
 Array size: 100 {0,1,0,3,0,5,....,99,0}
@@ -35,7 +35,7 @@ For this version, I do not consider the bank confliction and I guess that is a b
 issue.
 
 
-Question 3:
+#Question 3:
 Compare my version of Scan with Thrust Scan
 Array size: 50000 {0,1,0,3,0,5,....,49999,0}
 iterate number: 100 times
